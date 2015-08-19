@@ -8,11 +8,8 @@ import os
 import tempfile
 import sys
 import time
-import ast
 import socket
 import threading
-import logging
-import multiprocessing
 
 from contextlib import closing
 from twisted.internet import threads, reactor
@@ -79,7 +76,10 @@ class ContainerPane(Pane):
 
     def make_container_row(self, container):
         if "seconds" in container['status']: 
-            container['status'] = "Up 0 minutes"
+            if "Exited" in container['status']:
+                container['status'] = "Exited 0 minutes ago"
+            else:
+                container['status'] = "Up 0 minutes"
         row = self.listing.create_row({
             'Id': container['id'][:12],
             'Image': container['image'],
@@ -114,6 +114,8 @@ class ContainerPane(Pane):
             highlighter.remove(row)
 
         for container in running:
+            if container['names'] == None:
+                continue
             in_names = any(filter in name.lower() for name in container['names'])
             in_id = filter in container['id'].lower()
             in_status = filter in container['status'].lower()
